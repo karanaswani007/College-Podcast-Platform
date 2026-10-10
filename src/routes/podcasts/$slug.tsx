@@ -118,7 +118,7 @@ function ReplaceAudio({ podcast }: { podcast: PodcastCard }) {
   const [message, setMessage] = useState<string | null>(null);
   const [messageIsError, setMessageIsError] = useState(false);
 
-  if (profile?.role !== "creator" && profile?.role !== "admin") return null;
+  if (profile?.role !== "creator" && profile?.role !== "admin" && profile?.role !== "superadmin") return null;
 
   const onSelect = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.currentTarget.files?.[0];

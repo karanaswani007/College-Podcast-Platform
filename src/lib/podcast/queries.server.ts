@@ -13,6 +13,7 @@ import {
 import type {
   AdminOverview,
   AdminUser,
+  AdminUsersPage,
   CategoryCard,
   DashboardData,
   HistoryItem,
@@ -100,6 +101,12 @@ function asStatus(value: unknown): PodcastStatus {
     return value;
   }
   return "draft";
+}
+
+function asRole(value: unknown): Role | null {
+  return value === "superadmin" || value === "admin" || value === "creator" || value === "student"
+    ? value
+    : null;
 }
 
 function mapRow(row: Record<string, unknown>): ManagedPodcast {
@@ -286,9 +293,9 @@ async function ensureProfile(sql: Sql, userId: string): Promise<Profile> {
     const users = await sql.query<{ name: string }>(`select name from "user" where id = $1`, [userId]);
     const name = String(users[0]?.name ?? "Student").trim().slice(0, 80) || "Student";
     const admins = await sql.query<{ n: number }>(
-      "select count(*)::int as n from profiles where role = 'admin'",
+      "select count(*)::int as n from profiles where role in ('admin', 'superadmin')",
     );
-    const role: Role = Number(admins[0]?.n ?? 0) === 0 ? "admin" : "student";
+    const role: Role = Number(admins[0]?.n ?? 0) === 0 ? "superadmin" : "student";
     await sql.query(
       `insert into profiles (id, display_name, role) values ($1, $2, $3) on conflict (id) do nothing`,
       [userId, name, role],
@@ -303,9 +310,12 @@ async function ensureProfile(sql: Sql, userId: string): Promise<Profile> {
   );
   const row = rows[0];
   if (!row) throw new UserFacingError("Your profile could not be created.");
-  const role = row.role === "admin" || row.role === "creator" || row.role === "student" ? row.role : "student";
+  const role =
+    row.role === "superadmin" || row.role === "admin" || row.role === "creator" || row.role === "student"
+      ? row.role
+      : "student";
   let pendingCount = 0;
-  if (role === "admin") {
+  if (isAdminRole(role)) {
     const pending = await sql.query<{ n: number }>(
       "select count(*)::int as n from podcasts where status = 'pending'",
     );
@@ -322,13 +332,25 @@ async function ensureProfile(sql: Sql, userId: string): Promise<Profile> {
 }
 
 function assertStaff(profile: Profile) {
-  if (profile.role !== "admin" && profile.role !== "creator") {
+  if (!isAdminRole(profile.role) && profile.role !== "creator") {
     throw new UserFacingError("Ask an admin to grant creator access before uploading.");
   }
 }
 
 function assertAdmin(profile: Profile) {
-  if (profile.role !== "admin") throw new UserFacingError("Only an admin can do that.");
+  if (!isAdminRole(profile.role)) {
+    throw new UserFacingError("Only an admin can do that.");
+  }
+}
+
+function isAdminRole(role: Role) {
+  return role === "admin" || role === "superadmin";
+}
+
+function assertSuperAdmin(profile: Profile) {
+  if (profile.role !== "superadmin") {
+    throw new UserFacingError("Only a superadmin can manage administrator roles.");
+  }
 }
 
 export async function getProfile(userId: string): Promise<Profile> {
@@ -445,7 +467,7 @@ export async function saveProgress(
   if (!podcast) throw new UserFacingError("That episode could not be found.");
   const profile = await ensureProfile(sql, userId);
   const allowed =
-    podcast.status === "published" || podcast.created_by === userId || profile.role === "admin";
+    podcast.status === "published" || podcast.created_by === userId || isAdminRole(profile.role);
   if (!allowed) throw new UserFacingError("You do not have permission to record progress for that episode.");
   const effective = duration || Number(podcast.duration_seconds ?? 0);
   if (effective > 0 && position > effective + 5) {
@@ -640,7 +662,7 @@ export async function createPodcast(
   }
   await assertOwnedMedia(sql, userId, input.audioPath, "audio");
   await assertOwnedMedia(sql, userId, input.thumbnailPath, "image");
-  const status: PodcastStatus = profile.role === "admin" && input.publishNow !== false ? "published" : "pending";
+  const status: PodcastStatus = isAdminRole(profile.role) && input.publishNow !== false ? "published" : "pending";
   const id = crypto.randomUUID();
   const slug = await uniqueSlug(sql, input.title);
   await sql.query(
@@ -679,7 +701,7 @@ export async function getManagedPodcast(userId: string, id: string): Promise<Man
   );
   if (!rows[0]) return null;
   const podcast = mapRow(rows[0]);
-  if (podcast.status !== "published" && podcast.createdBy !== userId && profile.role !== "admin") {
+  if (podcast.status !== "published" && podcast.createdBy !== userId && !isAdminRole(profile.role)) {
     throw new UserFacingError("You do not have permission to view that episode.");
   }
   if (profile.role === "student" && podcast.createdBy !== userId && podcast.status !== "published") {
@@ -711,7 +733,7 @@ export async function updatePodcast(
   );
   if (!rows[0]) throw new UserFacingError("That episode could not be found.");
   const current = mapRow(rows[0]);
-  if (profile.role !== "admin" && current.createdBy !== userId) {
+  if (!isAdminRole(profile.role) && current.createdBy !== userId) {
     throw new UserFacingError("You can only edit your own episodes.");
   }
   const category = await sql.query("select id from categories where id = $1", [input.categoryId]);
@@ -769,15 +791,15 @@ export async function deletePodcast(userId: string, id: string) {
   );
   const current = rows[0];
   if (!current) throw new UserFacingError("That episode could not be found.");
-  if (profile.role !== "admin" && current.created_by !== userId) {
+  if (!isAdminRole(profile.role) && current.created_by !== userId) {
     throw new UserFacingError("You can only delete your own episodes.");
   }
   if (profile.role === "student") throw new UserFacingError("Creator access is required to delete episodes.");
   const audio = current.audio_path;
   const thumb = current.thumbnail_path;
   await sql.query("delete from podcasts where id = $1", [id]);
-  await maybeDeleteMedia(sql, userId, profile.role === "admin", audio);
-  await maybeDeleteMedia(sql, userId, profile.role === "admin", thumb);
+  await maybeDeleteMedia(sql, userId, isAdminRole(profile.role), audio);
+  await maybeDeleteMedia(sql, userId, isAdminRole(profile.role), thumb);
   return { deleted: true };
 }
 
@@ -911,45 +933,117 @@ export async function reviewQueue(userId: string): Promise<ReviewItem[]> {
   return rows.map((row) => ({ ...mapRow(row), creatorName: String(row.creator_name) }));
 }
 
-export async function adminUsers(userId: string, q?: string): Promise<AdminUser[]> {
+export async function adminUsers(userId: string, q?: string, page = 1): Promise<AdminUsersPage> {
   const sql = await database();
   assertAdmin(await ensureProfile(sql, userId));
   const term = searchTerm(q);
+  const pageSize = 50;
+  const countRows = await sql.query<{ total: number }>(
+    `select count(*)::int as total
+     from "user" u
+     left join profiles p on p.id = u.id
+     where ($1 = '' or u.email ilike $2 or u.name ilike $2 or coalesce(p.display_name, '') ilike $2)`,
+    [term, `%${term}%`],
+  );
   const rows = await sql.query<Record<string, unknown>>(
-    `select u.id, u.email, u.name, u."createdAt"::text as created_at, p.display_name, p.role
+    `select u.id, u.email, u.name, u."createdAt"::text as created_at,
+       p.display_name, p.role, p.blocked_at::text as blocked_at,
+       (select max(s."updatedAt")::text from "session" s where s."userId" = u.id) as last_active_at,
+       (select count(*)::int from podcasts po where po.created_by = u.id) as upload_count,
+       (select count(*)::int from listening_history h where h.user_id = u.id) as listening_count
      from "user" u
      left join profiles p on p.id = u.id
      where ($1 = '' or u.email ilike $2 or u.name ilike $2 or coalesce(p.display_name, '') ilike $2)
      order by u."createdAt" desc
-     limit 200`,
-    [term, `%${term}%`],
+     limit $3 offset $4`,
+    [term, `%${term}%`, pageSize, (page - 1) * pageSize],
   );
-  return rows.map((row) => ({
+  const users: AdminUser[] = rows.map((row) => ({
     id: String(row.id),
     email: String(row.email ?? ""),
     name: String(row.name ?? ""),
     displayName: row.display_name ? String(row.display_name) : null,
-    role: row.role === "admin" || row.role === "creator" || row.role === "student" ? row.role : null,
+    role: asRole(row.role),
     createdAt: String(row.created_at ?? ""),
+    lastActiveAt: row.last_active_at ? String(row.last_active_at) : null,
+    uploadCount: Number(row.upload_count ?? 0),
+    listeningCount: Number(row.listening_count ?? 0),
+    blockedAt: row.blocked_at ? String(row.blocked_at) : null,
   }));
+  return { users, total: Number(countRows[0]?.total ?? 0), page, pageSize };
 }
 
 export async function setUserRole(userId: string, targetId: string, role: Role) {
   const sql = await database();
-  assertAdmin(await ensureProfile(sql, userId));
+  assertSuperAdmin(await ensureProfile(sql, userId));
+  if (targetId === userId) throw new UserFacingError("You cannot change your own role.");
   const users = await sql.query(`select id from "user" where id = $1`, [targetId]);
   if (!users.length) throw new UserFacingError("That account could not be found.");
   const current = await ensureProfile(sql, targetId);
-  if (current.role === "admin" && role !== "admin") {
-    const admins = await sql.query<{ n: number }>(
-      "select count(*)::int as n from profiles where role = 'admin'",
-    );
-    if (Number(admins[0]?.n ?? 0) <= 1) {
-      throw new UserFacingError("The platform needs at least one admin.");
-    }
+  if (current.role === "superadmin") {
+    throw new UserFacingError("The superadmin role cannot be reassigned.");
   }
   await sql.query("update profiles set role = $2, updated_at = now() where id = $1", [targetId, role]);
   return { role };
+}
+
+export async function setUserBlocked(userId: string, targetId: string, blocked: boolean) {
+  const sql = await database();
+  const actor = await ensureProfile(sql, userId);
+  assertAdmin(actor);
+  if (targetId === userId) throw new UserFacingError("You cannot block your own account.");
+  const users = await sql.query(`select id from "user" where id = $1`, [targetId]);
+  if (!users.length) throw new UserFacingError("That account could not be found.");
+  const target = await ensureProfile(sql, targetId);
+  if (isAdminRole(target.role)) {
+    if (actor.role !== "superadmin") {
+      throw new UserFacingError("Only a superadmin can manage administrator accounts.");
+    }
+    if (target.role === "superadmin") {
+      throw new UserFacingError("Superadmin accounts cannot be blocked.");
+    }
+  }
+  if (blocked) {
+    await sql.transaction(async (tx) => {
+      await tx.query("update profiles set blocked_at = now(), updated_at = now() where id = $1", [targetId]);
+      await tx.query('delete from "session" where "userId" = $1', [targetId]);
+    });
+  } else {
+    await sql.query("update profiles set blocked_at = null, updated_at = now() where id = $1", [targetId]);
+  }
+  return { blocked };
+}
+
+export async function deleteUser(userId: string, targetId: string) {
+  const sql = await database();
+  const actor = await ensureProfile(sql, userId);
+  assertAdmin(actor);
+  if (targetId === userId) throw new UserFacingError("You cannot delete your own account.");
+  const users = await sql.query(`select id from "user" where id = $1`, [targetId]);
+  if (!users.length) throw new UserFacingError("That account could not be found.");
+  const target = await ensureProfile(sql, targetId);
+  if (isAdminRole(target.role)) {
+    if (actor.role !== "superadmin") {
+      throw new UserFacingError("Only a superadmin can manage administrator accounts.");
+    }
+    if (target.role === "superadmin") {
+      throw new UserFacingError("Superadmin accounts cannot be deleted.");
+    }
+  }
+  await sql.transaction(async (tx) => {
+    await tx.query("delete from podcast_plays where user_id = $1", [targetId]);
+    await tx.query("delete from listening_history where user_id = $1", [targetId]);
+    await tx.query("delete from saved_podcasts where user_id = $1", [targetId]);
+    await tx.query("delete from podcast_likes where user_id = $1", [targetId]);
+    await tx.query("update podcasts set approved_by = null where approved_by = $1", [targetId]);
+    await tx.query("delete from podcasts where created_by = $1", [targetId]);
+    await tx.query("delete from media_objects where owner_id = $1", [targetId]);
+    await tx.query("delete from profiles where id = $1", [targetId]);
+    await tx.query('delete from "session" where "userId" = $1', [targetId]);
+    await tx.query('delete from "account" where "userId" = $1', [targetId]);
+    await tx.query('delete from "user" where id = $1', [targetId]);
+  });
+  return { deleted: true };
 }
 
 async function uniqueCategorySlug(sql: Sql, name: string, currentId = ""): Promise<string> {

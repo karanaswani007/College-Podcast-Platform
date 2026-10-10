@@ -35,7 +35,7 @@ function UploadPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const canCreate = role === "admin" || role === "creator";
+  const canCreate = role === "admin" || role === "superadmin" || role === "creator";
   const busy = audioBusy || imageBusy || submitting;
 
   useEffect(() => {
@@ -132,7 +132,7 @@ function UploadPage() {
           thumbnailPath: form.thumbnailPath,
           durationSeconds: form.durationSeconds,
           tags: form.tags,
-          publishNow: role === "admin",
+          publishNow: role === "admin" || role === "superadmin",
         },
       });
       if (result.ok) {
@@ -158,7 +158,7 @@ function UploadPage() {
   }
 
   return (
-    <AppShell role={role} variant={role === "admin" ? "admin" : "campus"}>
+    <AppShell role={role} variant={role === "admin" || role === "superadmin" ? "admin" : "campus"}>
       <div className="mx-auto max-w-2xl space-y-4">
         <header>
           <p className="text-sm font-medium uppercase tracking-[0.2em] text-violet">Create</p>

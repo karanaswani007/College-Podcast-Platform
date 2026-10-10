@@ -93,5 +93,14 @@ export async function requireUserId(bearerToken?: string): Promise<string> {
   }
   const user = await getSessionUser(bearerToken);
   if (!user) throw new UnauthorizedError();
+  const { getSql } = await import("@/lib/db");
+  const sql = await getSql();
+  const profiles = await sql.query<{ blocked_at: string | null }>(
+    "select blocked_at from profiles where id = $1",
+    [user.id],
+  );
+  if (profiles[0]?.blocked_at) {
+    throw new Error("This account has been blocked. Contact a platform administrator.");
+  }
   return user.id;
 }

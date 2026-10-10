@@ -13,6 +13,7 @@ import {
   roleSchema,
   statusSchema,
   updatePodcastSchema,
+  userActionSchema,
   userQuerySchema,
 } from "@/lib/podcast/schemas";
 import type { ActionResult } from "@/lib/podcast/types";
@@ -227,7 +228,7 @@ export const getAdminUsers = createServerFn({ method: "GET" })
     const parsed = userQuerySchema.safeParse(data ?? {});
     if (!parsed.success) throw new UserFacingError(issue(parsed.error));
     const { adminUsers } = await import("./queries.server");
-    return read(() => adminUsers(context.userId, parsed.data.q));
+    return read(() => adminUsers(context.userId, parsed.data.q, parsed.data.page));
   });
 
 export const changeUserRole = createServerFn({ method: "POST" })
@@ -240,13 +241,45 @@ export const changeUserRole = createServerFn({ method: "POST" })
     return mutate(() => setUserRole(context.userId, parsed.data.userId, parsed.data.role));
   });
 
+export const setAdminUserBlocked = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: unknown) => input)
+  .handler(async ({ data, context }) => {
+    const parsed = userActionSchema.safeParse(data);
+    if (!parsed.success) return { ok: false as const, message: issue(parsed.error) };
+    const { setUserBlocked } = await import("./queries.server");
+    return mutate(() => setUserBlocked(context.userId, parsed.data.userId, true));
+  });
+
+export const restoreAdminUser = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: unknown) => input)
+  .handler(async ({ data, context }) => {
+    const parsed = userActionSchema.safeParse(data);
+    if (!parsed.success) return { ok: false as const, message: issue(parsed.error) };
+    const { setUserBlocked } = await import("./queries.server");
+    return mutate(() => setUserBlocked(context.userId, parsed.data.userId, false));
+  });
+
+export const deleteAdminUser = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: unknown) => input)
+  .handler(async ({ data, context }) => {
+    const parsed = userActionSchema.safeParse(data);
+    if (!parsed.success) return { ok: false as const, message: issue(parsed.error) };
+    const { deleteUser } = await import("./queries.server");
+    return mutate(() => deleteUser(context.userId, parsed.data.userId));
+  });
+
 export const getAdminCategories = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const { listCategoryOptions, getProfile } = await import("./queries.server");
     return read(async () => {
       const profile = await getProfile(context.userId);
-      if (profile.role !== "admin") throw new UserFacingError("Only an admin can do that.");
+      if (profile.role !== "admin" && profile.role !== "superadmin") {
+        throw new UserFacingError("Only an admin can do that.");
+      }
       return listCategoryOptions();
     });
   });

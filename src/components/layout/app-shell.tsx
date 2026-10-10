@@ -53,7 +53,7 @@ export function AppShell({
           { to: "/dashboard", hash: "history", label: "Listening History", icon: History },
           { to: "/dashboard", hash: "profile", label: "Profile", icon: UserRound },
           ...(role !== "student" ? [{ to: "/upload", label: "Upload", icon: Upload }] : []),
-          ...(role === "admin" ? [{ to: "/admin", label: "Admin", icon: Shield }] : []),
+          ...(role === "admin" || role === "superadmin" ? [{ to: "/admin", label: "Admin", icon: Shield }] : []),
         ];
 
   return (
@@ -95,7 +95,15 @@ export function AppShell({
                 {link}
               </a>
             ) : (
-              <Link key={item.to} to={item.to} className="nav-pill" aria-current={active ? "page" : undefined}>{link}</Link>
+              <Link
+                key={item.to}
+                to={item.to}
+                activeOptions={{ exact: true }}
+                className="nav-pill"
+                aria-current={active ? "page" : undefined}
+              >
+                {link}
+              </Link>
             );
           })}
           <button

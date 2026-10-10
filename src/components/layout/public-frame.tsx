@@ -52,7 +52,7 @@ export function PublicFrame({ children }: { children: ReactNode }) {
             })}
           </nav>
           <div className="ml-auto hidden items-center gap-2 md:flex">
-            <AuthLinks isPending={isPending} signedIn={Boolean(user)} admin={profile?.role === "admin"} name={profile?.displayName} />
+            <AuthLinks isPending={isPending} signedIn={Boolean(user)} admin={profile?.role === "admin" || profile?.role === "superadmin"} name={profile?.displayName} />
           </div>
           <button type="button" className="icon-btn ml-auto md:hidden" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen((value) => !value)}>
             {open ? <X /> : <Menu />}
@@ -65,7 +65,7 @@ export function PublicFrame({ children }: { children: ReactNode }) {
                 {link.label}
               </Link>
             ))}
-            <AuthLinks isPending={isPending} signedIn={Boolean(user)} admin={profile?.role === "admin"} name={profile?.displayName} />
+            <AuthLinks isPending={isPending} signedIn={Boolean(user)} admin={profile?.role === "admin" || profile?.role === "superadmin"} name={profile?.displayName} />
           </div>
         ) : null}
       </header>

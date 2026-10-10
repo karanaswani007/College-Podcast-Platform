@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { BarChart3, CircleDashed, Mic, Users } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { useProfile } from "@/components/layout/use-profile";
@@ -6,21 +6,31 @@ import { getAdminOverview } from "@/lib/podcast/api";
 import { loadSignedIn } from "@/lib/auth/route-guard";
 
 export const Route = createFileRoute("/admin")({
-  loader: () => loadSignedIn(() => getAdminOverview()),
+  loader: ({ location }) =>
+    location.pathname === "/admin" ? loadSignedIn(() => getAdminOverview()) : null,
   component: AdminPage,
 });
 
 function AdminPage() {
   const overview = Route.useLoaderData();
   const { profile } = useProfile();
+  const path = useRouterState({ select: (state) => state.location.pathname });
   const role = profile?.role ?? "admin";
+
+  if (path !== "/admin" || !overview) return <Outlet />;
 
   return (
     <AppShell role={role} variant="admin" pendingCount={overview.pending}>
       <div className="space-y-6">
-        <header>
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-violet">Operations</p>
-          <h1 className="mt-1 text-3xl font-semibold">Admin dashboard</h1>
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-violet">Operations</p>
+            <h1 className="mt-1 text-3xl font-semibold">Admin dashboard</h1>
+          </div>
+          <Link to="/admin/users" className="btn btn-primary w-fit">
+            <Users className="size-4" />
+            Manage users
+          </Link>
         </header>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

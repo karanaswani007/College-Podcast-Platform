@@ -1,4 +1,4 @@
-export type Role = "student" | "creator" | "admin";
+export type Role = "student" | "creator" | "admin" | "superadmin";
 
 export type PodcastStatus = "draft" | "pending" | "published" | "rejected";
 
@@ -106,6 +106,17 @@ export type AdminUser = {
   displayName: string | null;
   role: Role | null;
   createdAt: string;
+  lastActiveAt: string | null;
+  uploadCount: number;
+  listeningCount: number;
+  blockedAt: string | null;
+};
+
+export type AdminUsersPage = {
+  users: AdminUser[];
+  total: number;
+  page: number;
+  pageSize: number;
 };
 
 export type ActionResult<T> = { ok: true; data: T } | { ok: false; message: string };

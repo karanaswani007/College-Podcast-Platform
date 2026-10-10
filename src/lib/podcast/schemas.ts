@@ -61,8 +61,13 @@ export const roleSchema = z.object({
   role: z.enum(["student", "creator", "admin"]),
 });
 
+export const userActionSchema = z.object({
+  userId: z.string().trim().min(1),
+});
+
 export const userQuerySchema = z.object({
   q: z.string().optional(),
+  page: z.number().int().min(1).max(10000).optional(),
 });
 
 export const adminListSchema = z.object({
