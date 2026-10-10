@@ -1,0 +1,341 @@
+MASTER PROMPT — COLLEGE PODCAST PLATFORM (MAJOR PROJECT)
+
+ROLE Act as a senior full-stack software engineer, UI/UX designer,
+database architect, security engineer, QA engineer, and technical
+mentor. Build a complete, polished, responsive, production-minded
+College Podcast Platform based on the reference UI image attached to
+this conversation. The application is a college major project, so it
+must be genuinely functional, easy to demonstrate, well structured,
+documented, and understandable to a student during a viva.
+
+PRIMARY OBJECTIVE Build one complete web application called “College
+Podcast Platform” where students can discover and listen to educational
+podcasts, search and filter episodes, like/save episodes, track
+listening progress, and manage their profile. Authorized users can
+submit podcasts, and administrators can manage podcasts, categories,
+users, and platform analytics.
+
+IMPORTANT WORKING RULES 1. First inspect the attached reference image
+and use it as the visual design guide. Reproduce its overall information
+architecture and visual feel, not every tiny pixel: deep navy/purple
+backgrounds, violet accents, microphone/audio-wave imagery, clean white
+content areas, podcast cover cards, clear typography, rounded cards,
+subtle shadows, and responsive layouts. 2. Build the actual
+application—not just a static UI, mockup, prototype, or design
+description. 3. Do not stop after creating a plan or a few sample files.
+Implement all essential pages, components, database schema,
+authentication, storage integration, security policies, error handling,
+tests where practical, and deployment documentation. 4. Do not leave
+buttons as decorative controls. Every visible action must work, or be
+clearly marked as a future feature and omitted from the core UI. 5. Do
+not use fake API calls, fake authentication, hardcoded dashboard
+statistics presented as live data, or local arrays as a substitute for
+the connected database. Seed/demo data may be provided separately and
+clearly identified. 6. Do not claim that something is tested, deployed,
+or configured unless it actually is. If credentials or external access
+are unavailable, implement the integration, provide exact setup
+instructions, and clearly identify what the user must configure. 7. Work
+incrementally. Before editing, inspect the existing repository and
+preserve useful existing code. If the repository is empty, initialize
+the project. Do not overwrite unrelated files. 8. If the response or
+context limit prevents completion in one pass, maintain a concise
+checklist of completed and pending work, then continue from the next
+unfinished task. Never silently omit essential modules. 9. Make
+reasonable engineering decisions without repeatedly asking questions.
+Use the defaults below unless the existing repository or a clear
+requirement makes them unsuitable.
+
+DEFAULT TECHNOLOGY STACK - Frontend: React + Vite + TypeScript. -
+Styling: Tailwind CSS, with a coherent design system and reusable
+components. - Routing: React Router. - Icons: Lucide React. -
+Backend/database/authentication/storage: Supabase (PostgreSQL, Supabase
+Auth, Supabase Storage). - Forms and validation: React Hook Form and
+Zod, if compatible with the installed stack. - Charts: Recharts for
+admin analytics where useful. - Notifications: a lightweight toast
+library or an accessible custom toast component. - Version control:
+Git/GitHub. - Deployment target: Vercel for the frontend and Supabase
+for backend services. - Use current stable, mutually compatible package
+versions. Do not invent package APIs. Inspect package
+documentation/types as needed. - Keep the project suitable for a student
+to run locally without paid services. Prefer free-tier services, while
+documenting limits and potential costs.
+
+DESIGN AND RESPONSIVE REQUIREMENTS - Use the attached reference image as
+the design reference. - Brand name: College Podcast Platform. -
+Suggested tagline: “Listen • Learn • Grow”. - Visual theme: navy,
+indigo, violet/purple accents, white/light-gray surfaces, readable dark
+text, restrained pink/green status accents. - Create a polished desktop
+layout and mobile/tablet layouts. No horizontal overflow at common
+screen widths. - Use consistent spacing, typography, border radii, focus
+states, hover states, loading states, empty states, and error states. -
+Use semantic HTML, accessible labels, keyboard-friendly controls,
+sufficient contrast, and visible focus indicators. - Use real, permitted
+podcast cover images and audio demo assets only if their licensing and
+source are appropriate. If no reliable asset is available, use tasteful
+local placeholder artwork and clearly documented demo audio rather than
+broken URLs. - Avoid depending on external image URLs that may
+disappear. Provide local fallback artwork or robust image fallbacks. -
+Add loading skeletons or clear loading indicators for async
+operations. - Add a responsive navigation bar and sidebar where
+appropriate. - Ensure the site looks credible for a college
+major-project demonstration.
+
+REQUIRED PAGES AND FEATURES
+
+A. PUBLIC HOME PAGE - Responsive header with brand/logo, Home, Podcasts,
+About, Login, Register, and profile controls when signed in. - Hero
+section with headline “College Podcast Platform”, a concise description,
+a clear “Explore Podcasts” CTA, and podcast/microphone visual. -
+Featured podcast cards populated from published database records. -
+Category cards such as Education, Technology, College Life, Events, and
+Motivation. - Latest/trending podcasts, with counts or metrics only when
+backed by real data. - Footer with About, contact/support placeholder,
+and relevant navigation. - All links and CTA buttons must navigate
+correctly.
+
+B. PODCAST LIBRARY PAGE - Show published podcasts from Supabase, with
+pagination or a reasonable load-more approach. - Search by title,
+description, or speaker where practical. - Filter by category and sort
+by newest/popular where the data supports it. - Podcast cards display
+thumbnail, title, speaker, category, duration, play action, like action,
+and save/bookmark action. - Provide loading, error, and no-results
+states. - Do not expose unpublished drafts or rejected submissions to
+public users. - Keep search and filters usable on mobile.
+
+C. PODCAST DETAILS / AUDIO PLAYER - Provide a dedicated podcast
+detail/player view or a clear expanded player. - Functional HTML5 audio
+playback with play/pause, seek bar, current time, duration, volume, and
+10-second skip backward/forward. - Display title, speaker, category,
+description, cover art, likes, save control, and related podcasts. -
+Persist playback position for authenticated users and allow “Continue
+Listening” where feasible. - Handle invalid, missing, or inaccessible
+audio files gracefully. - Use a single persistent/global player only if
+implemented reliably; otherwise use a stable player on the detail page.
+Avoid multiple overlapping audio streams. - Do not fake play counts.
+Record plays using a clearly defined rule, such as after playback passes
+a minimum threshold, and avoid counting repeated progress events as
+separate plays.
+
+D. AUTHENTICATION AND AUTHORIZATION - Implement sign-up, sign-in,
+sign-out, session persistence, and protected routes using Supabase
+Auth. - Include email/password authentication, validation, password
+visibility toggle, useful error messages, and forgot-password/reset flow
+if supported by the configured Supabase project. - OAuth/Google login is
+optional; do not show a nonfunctional button. - Create a profile record
+for a new user safely. - Roles: student, creator/authorized uploader,
+admin. Default public signups to student. Never allow a user to assign
+themselves an admin role through client-side form data. - Use a secure,
+documented method for initial admin provisioning, such as manually
+updating the role through the Supabase dashboard/SQL as an owner, or a
+trusted server-side process. Do not expose the Supabase service-role key
+in the browser. - Protect admin and uploader routes both in the UI and
+through database/storage policies. Frontend route protection alone is
+not security. - Add clear unauthorized and not-found pages. - Document
+required Supabase Auth redirect URLs for local development and Vercel
+deployment.
+
+E. STUDENT DASHBOARD - Responsive sidebar or navigation with Dashboard,
+Browse Podcasts, My Playlist/Saved Podcasts, Listening History, Profile,
+and Logout. - Display real metrics such as played/listening history
+count and saved podcast count. - Show recently played and saved
+podcasts. - Provide “Continue Listening” from saved playback positions
+where feasible. - Profile page should allow updating safe fields such as
+display name and avatar if avatar upload is implemented. - Show friendly
+first-use/empty states for new users.
+
+F. PODCAST UPLOAD / CREATOR WORKFLOW - Accessible only to an authorized
+creator/uploader or admin. - Form fields: title, description, category,
+speaker name, audio file, thumbnail image, and optional tags. - Validate
+required fields and file types/sizes on the client, and enforce access
+controls/policies on the backend/storage as well. - Upload audio and
+thumbnail files to Supabase Storage using safe unique paths. Store their
+resulting paths/URLs and metadata in PostgreSQL. - If student
+submissions are supported, set them to “pending” until an admin approves
+them. Never publish a student submission automatically unless explicitly
+configured. - Show upload progress when practical, success/error
+feedback, and prevent accidental duplicate submissions. - Provide
+edit/update/delete controls only to authorized owners/admins. - On
+deletion, handle associated storage files safely; avoid deleting files
+belonging to another user.
+
+G. ADMIN PANEL - Admin-only dashboard with real metrics: published
+podcasts, total users, total recorded plays, pending submissions. -
+Podcast management table with search/filter, status, category, speaker,
+and actions to view/edit/publish/unpublish/delete. - User management
+with role/status visibility and safe role changes restricted to
+admins. - Category management with create/edit/delete, preventing
+accidental removal of categories still in use or handling
+reassignment. - Submission review queue with approve/reject actions and
+optional rejection reason. - Analytics charts using actual database
+queries and clearly defined metrics. Avoid misleading static figures. -
+Confirm destructive actions and show actionable error/success
+messages. - Ensure admin pages and data remain protected by database
+policies, not merely hidden navigation links.
+
+H. ABOUT / PROJECT INFORMATION PAGE - Explain the platform’s purpose,
+target users, and benefits for college learning and communication. -
+Keep the content professional and appropriate for a college
+major-project demonstration. - Do not fabricate real college
+partnerships, endorsements, or statistics.
+
+DATABASE DESIGN Create a version-controlled SQL schema/migration file
+and setup instructions. Use UUID primary keys where appropriate,
+timestamps, foreign keys, indexes, constraints, and appropriate deletion
+behavior.
+
+Create and relate tables equivalent to: 1. profiles: id referencing
+auth.users, display_name, avatar_path or avatar_url, role, created_at,
+updated_at. 2. categories: id, name, slug, description, created_at. 3.
+podcasts: id, title, slug if needed, description, speaker_name,
+category_id, audio_path, thumbnail_path, duration_seconds, status
+(draft/pending/published/rejected), created_by, approved_by if
+applicable, created_at, updated_at, published_at. 4. podcast_likes:
+user_id, podcast_id, created_at; unique constraint on user_id +
+podcast_id. 5. saved_podcasts: user_id, podcast_id, created_at; unique
+constraint on user_id + podcast_id. 6. listening_history: id, user_id,
+podcast_id, playback_position_seconds, completed if appropriate,
+last_listened_at; unique or upsert strategy to avoid unnecessary
+duplicate records. 7. podcast_plays or equivalent analytics table:
+define how and when a play is counted; prevent every progress update
+from becoming a new play. 8. podcast_submissions or an equivalent
+workflow, only if needed separately from podcast status.
+
+Adapt the final schema to avoid unnecessary duplicate tables. Include
+indexes for common search/filter/join fields and sensible uniqueness
+constraints. Add created_at/updated_at handling as appropriate.
+
+SUPABASE SECURITY REQUIREMENTS - Implement and document Row Level
+Security (RLS) policies for every exposed table. - Public/anonymous
+users may read only published podcasts and public categories/metadata. -
+Users may read/update only their own profile fields, likes, saved
+podcasts, and listening history, subject to safe field restrictions. -
+Users must not be able to change their own role to admin or creator. -
+Only authorized creators/admins can create or edit permitted podcast
+records. Admin approval must be enforced. - Only admins can manage
+users, roles, categories, and approval status. - Storage
+buckets/policies must protect upload permissions and prevent
+unauthorized modification/deletion. Use safe object paths and validate
+allowed MIME types and size limits. - Do not trust role values or user
+IDs supplied by the browser without database policy checks. - Do not
+expose SUPABASE_SERVICE_ROLE_KEY or other server secrets in frontend
+code or VITE_ environment variables. - Use only the public Supabase
+anon/publishable key in the browser, protected by correct RLS and
+storage policies. - Provide a test checklist demonstrating that a normal
+student cannot perform admin actions.
+
+IMPLEMENTATION AND CODE QUALITY - Organize code into clear folders, for
+example: src/components, src/pages, src/layouts, src/hooks, src/lib,
+src/types, src/contexts, src/utils. - Use reusable components for
+podcast cards, audio player, forms, modals, tables, navigation, loading
+states, empty states, and errors. - Use TypeScript types for database
+entities and component props. - Keep components focused and
+maintainable. Avoid giant single-file components. - Create a centralized
+Supabase client and typed helpers for database/storage operations. -
+Validate form inputs and handle expected errors without exposing secrets
+or internal stack traces to users. - Use environment variables for
+configuration and provide a complete .env.example with placeholder
+values only. - Do not commit .env files, API keys, service-role keys,
+passwords, or personal data. Add suitable .gitignore entries. - Avoid
+unnecessary dependencies and do not use deprecated APIs. - Add useful
+comments where they clarify security-sensitive or non-obvious logic, not
+comments on every line. - Ensure npm scripts for dev, build, lint, and
+any configured tests work. - Resolve TypeScript errors, lint errors,
+broken imports, and build errors before declaring completion.
+
+DEMO CONTENT - Provide a small, clearly labeled seed/demo dataset for
+categories and sample podcast metadata. - Do not invent claims about
+real people, real institutions, or real platform usage. - If sample
+audio is included, use an owned or appropriately licensed short sample,
+or document how the user can upload their own. Never bundle copyrighted
+music or recordings without permission. - Provide a safe initial admin
+setup procedure without embedding credentials in source code.
+
+TESTING AND ACCEPTANCE CRITERIA The project is considered complete only
+when the following are implemented or any unavoidable
+external-configuration dependency is explicitly documented: 1.
+Application starts locally using documented commands. 2. Production
+build succeeds. 3. Home page, podcast library, player, authentication,
+student dashboard, upload flow, and admin panel are implemented. 4.
+Database schema/migrations and RLS policies are provided. 5. Student,
+creator, and admin permissions are enforced. 6. A student can register,
+sign in, browse published podcasts, play audio, like/save an episode,
+and see their history. 7. An authorized creator/admin can upload an
+audio file and thumbnail and create a podcast record. 8. Admin can
+review submissions and manage podcast/category records. 9. Search and
+category filters work against actual data. 10. Forms show validation and
+readable errors. 11. Empty, loading, success, and failure states are
+handled. 12. No secrets are committed or exposed to the browser. 13.
+Layout is responsive and accessible. 14. Vercel deployment instructions
+and Supabase setup instructions are complete. 15. No essential buttons
+are dead, no core flow relies on mock data, and no broken imports or
+obvious console errors remain.
+
+DOCUMENTATION AND COLLEGE SUBMISSION Create a professional README.md
+that includes: - Project overview, objectives, and feature list. -
+Technology stack and architecture. - Prerequisites. - Exact local setup
+commands. - Supabase project setup and SQL migration execution. -
+Storage bucket setup and policies. - Environment variable setup using
+.env.example. - Initial admin provisioning. - Demo data setup. - Local
+development and production build commands. - GitHub and Vercel
+deployment steps. - Common errors and troubleshooting. - Security notes
+and known limitations.
+
+Also create a docs/ folder with: - database-schema.md describing tables
+and relationships. - architecture.md describing the frontend, Supabase
+services, data flow, and access control. - testing-checklist.md with
+functional and authorization test cases. - project-report-outline.md
+with sections for abstract, problem statement, objectives,
+literature/background, requirements, architecture, ER diagram guidance,
+implementation, test results, limitations, future scope, and
+conclusion. - viva-questions.md with understandable questions and
+answers about React, TypeScript, REST/database concepts where relevant,
+SQL, PostgreSQL, Supabase, authentication, RLS, storage, audio
+streaming, security, testing, and deployment. Do not fabricate completed
+experiments, survey findings, or test results. Mark items that the
+student must fill after running the application.
+
+DEPLOYMENT - Configure Vercel-compatible routing so refreshing a nested
+React Router URL does not return a 404. - Document environment variables
+such as VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (or the current
+recommended public-key variable for the selected Supabase SDK), using
+only browser-safe values. - Configure Supabase Auth site URL and allowed
+redirect URLs for localhost and the deployed Vercel domain. - Explain
+how to apply database migrations and configure storage
+buckets/policies. - Never claim deployment is completed unless actually
+deployed and verified. - Clearly separate free-tier capabilities from
+possible paid-tier limitations.
+
+EXECUTION PLAN Follow this order: PHASE 1: Inspect the repository and
+attached reference image; summarize existing project structure and
+identify whether this is a new or existing project. PHASE 2: Set up or
+repair the project foundation, dependencies, styling, routing, types,
+environment example, and reusable layout. PHASE 3: Implement the visual
+pages and responsive navigation using the reference design. PHASE 4:
+Implement SQL schema/migrations, RLS policies, storage setup, and
+Supabase client integration. PHASE 5: Implement authentication and
+role-aware route protection. PHASE 6: Implement library/search/filter,
+audio player, likes, bookmarks, and listening history. PHASE 7:
+Implement creator uploads and the admin management/approval workflow.
+PHASE 8: Implement real analytics, validation, accessibility, error
+states, and security checks. PHASE 9: Run available
+lint/type/build/tests; fix issues and report what was actually verified.
+PHASE 10: Complete README and docs for setup, deployment, project
+report, testing, and viva.
+
+At the beginning, give a brief implementation plan and list any external
+configuration that will require the user’s action. Then start
+implementing immediately. Do not stop at the plan to ask for approval.
+
+FINAL RESPONSE FORMAT When implementation work is complete, provide: 1.
+What was built. 2. Main features implemented. 3. Important files
+created/modified. 4. Exact local run commands. 5. Supabase configuration
+steps still required. 6. How to create the first admin securely. 7.
+Build/test results that were actually observed. 8. Vercel deployment
+steps. 9. Any known limitations or remaining tasks. 10. A short
+explanation of the project architecture suitable for the student to
+understand and explain in a viva.
+
+The goal is a real, maintainable, secure, attractive, fully responsive
+College Podcast Platform—not merely a UI clone. Prioritize correctness,
+security, working end-to-end flows, and student understanding over
+unnecessary complexity.
